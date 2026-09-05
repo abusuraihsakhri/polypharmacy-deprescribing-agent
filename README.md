@@ -48,14 +48,18 @@ python cli.py --task-id <value> --target <value> --primary <value> --secondary <
 ```
 
 ### Parameter Reference
-- `--task-id`: Specifies input measurement or parameter value.
-- `--target`: Specifies input measurement or parameter value.
-- `--primary`: Specifies input measurement or parameter value.
-- `--secondary`: Specifies input measurement or parameter value.
-- `--critical`: Specifies input measurement or parameter value.
-- `--status`: Specifies input measurement or parameter value.
-- `--input`: Specifies input measurement or parameter value.
-- `--output`: Specifies input measurement or parameter value.
+| Parameter | Command | Description | Default |
+|:----------|:--------|:------------|:--------|
+| `--task-id` | `audit` | Unique task/case identifier | `TASK-2026-001` |
+| `--target` | `audit` | Target entity or patient key identifier | `KEY-TARGET-01` |
+| `--primary` | `audit` | Primary domain measurement or score (float) | `28.5` |
+| `--secondary` | `audit` | Secondary kinetic or confidence score (float) | `14.2` |
+| `--critical` | `audit` | Flag for emergency escalation (boolean) | `False` |
+| `--status` | `audit` | Status code or phenotype descriptor | `DISCORDANT` |
+| `-i, --input` | `batch` | Path to input CSV file for batch processing | *required* |
+| `-o, --output` | `batch` | Path to output CSV file for results | `results.csv` |
+| `--host` | `serve` | Host address for the REST server | `127.0.0.1` |
+| `--port` | `serve` | Port number for the REST server | `8000` |
 
 ### Input Data Schema
 
@@ -79,6 +83,20 @@ python cli.py --task-id <value> --target <value> --primary <value> --secondary <
 * **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
 
 ---
+
+## 🔧 Configuration
+
+The audit system requires an `AUDIT_SECRET_KEY` environment variable for HMAC-SHA256 signing:
+
+```bash
+# Linux/macOS
+export AUDIT_SECRET_KEY="your-secure-audit-key"
+
+# Windows
+set AUDIT_SECRET_KEY=your-secure-audit-key
+```
+
+The CLI sets a default key automatically if none is provided. For production deployments, always set a strong secret.
 
 ## 🧪 Testing & Verification
 

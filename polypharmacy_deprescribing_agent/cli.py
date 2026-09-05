@@ -68,23 +68,34 @@ def main(argv=None):
         return 0
 
     if args.command == "batch":
-        with open(args.input, mode="r", encoding="utf-8-sig") as f:
-            reader = csv.DictReader(f)
-            fieldnames = list(reader.fieldnames or [])
-            rows = list(reader)
+        try:
+            with open(args.input, mode="r", encoding="utf-8-sig") as f:
+                reader = csv.DictReader(f)
+                fieldnames = list(reader.fieldnames or [])
+                rows = list(reader)
+        except FileNotFoundError:
+            print(f"Error: Input file '{args.input}' not found.", file=sys.stderr)
+            return 1
+        except PermissionError:
+            print(f"Error: Permission denied reading '{args.input}'.", file=sys.stderr)
+            return 1
 
         out_fields = fieldnames + ["overall_status", "total_alerts", "stat_critical_alerts", "consensus_summary"]
         out_rows = []
         for r in rows:
-            case = ClinicalCasePayload(
-                case_id=r.get("case_id", "CASE-01"),
-                patient_synthetic_id=r.get("patient_synthetic_id", "SYNTH-01"),
-                primary_metric=float(r.get("metric_primary", r.get("primary_metric", 15.0))),
-                secondary_metric=float(r.get("metric_secondary", r.get("secondary_metric", 5.0))),
-                status_flag=r.get("status_flag", r.get("status_text", "NORMAL")),
-                is_stat=bool(r.get("is_stat", r.get("critical_flag", False))),
-            )
-            dossier = coordinator.process_case(case)
+            try:
+                case = ClinicalCasePayload(
+                    case_id=r.get("case_id", "CASE-01"),
+                    patient_synthetic_id=r.get("patient_synthetic_id", "SYNTH-01"),
+                    primary_metric=float(r.get("metric_primary", r.get("primary_metric", 15.0))),
+                    secondary_metric=float(r.get("metric_secondary", r.get("secondary_metric", 5.0))),
+                    status_flag=r.get("status_flag", r.get("status_text", "NORMAL")),
+                    is_stat=bool(r.get("is_stat", r.get("critical_flag", False))),
+                )
+                dossier = coordinator.process_case(case)
+            except (ValueError, TypeError) as e:
+                print(f"Warning: Skipping row due to invalid data: {e}", file=sys.stderr)
+                continue
             row_dict = dict(r)
             row_dict["overall_status"] = dossier["overall_status"]
             row_dict["total_alerts"] = dossier["total_alerts"]
@@ -92,10 +103,14 @@ def main(argv=None):
             row_dict["consensus_summary"] = dossier["consensus_summary"]
             out_rows.append(row_dict)
 
-        with open(args.output, mode="w", encoding="utf-8", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=out_fields)
-            writer.writeheader()
-            writer.writerows(out_rows)
+        try:
+            with open(args.output, mode="w", encoding="utf-8", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=out_fields)
+                writer.writeheader()
+                writer.writerows(out_rows)
+        except PermissionError:
+            print(f"Error: Permission denied writing to '{args.output}'.", file=sys.stderr)
+            return 1
         print(f"Batch processed {len(out_rows)} records -> {args.output}")
         return 0
 

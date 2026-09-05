@@ -359,11 +359,11 @@ class CognitiveEngine:
         return res
 
 # =============================================================================
-# 8. MEDICATION
+# 8. MEDICATION RECONCILIATION
 # =============================================================================
 @dataclass
-class MedicationEngineResult:
-    feature_name: str = "Medication"
+class MedicationReconciliationEngineResult:
+    feature_name: str = "MedicationReconciliation"
     status: str = "OPTIMAL"
     score: float = 0.0
     metrics: Dict[str, Any] = field(default_factory=dict)
@@ -371,16 +371,16 @@ class MedicationEngineResult:
     recommendations: List[str] = field(default_factory=list)
     timestamp: str = field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat())
 
-class MedicationEngine:
+class MedicationReconciliationEngine:
     """
-    Medication: **Description:** reconciliation - automation -  -  - Import - and - reconcile - medication - lists - from - multiple - s
+    Medication Reconciliation: Import and reconcile medication lists from multiple sources.
     """
     def __init__(self, threshold: float = 1.0, config: Optional[Dict[str, Any]] = None):
         self.threshold = threshold
         self.config = config or {}
-        self.history: List[MedicationEngineResult] = []
+        self.history: List[MedicationReconciliationEngineResult] = []
 
-    def evaluate(self, primary_value: float, secondary_value: float = 0.0, **kwargs) -> MedicationEngineResult:
+    def evaluate(self, primary_value: float, secondary_value: float = 0.0, **kwargs) -> MedicationReconciliationEngineResult:
         alerts = []
         recs = []
         status = "OPTIMAL"
@@ -388,17 +388,17 @@ class MedicationEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"Medication: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
+            alerts.append(f"MedicationReconciliation: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
             recs.append("Initiate immediate protocol review and escalate to attending lead.")
         elif primary_value > self.threshold:
             status = "WARNING"
-            alerts.append(f"Medication: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
+            alerts.append(f"MedicationReconciliation: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
             recs.append("Increase monitoring frequency and perform secondary verification.")
         else:
             recs.append("Parameters nominal under standard operating bounds.")
 
-        res = MedicationEngineResult(
-            feature_name="Medication",
+        res = MedicationReconciliationEngineResult(
+            feature_name="MedicationReconciliation",
             status=status,
             score=score,
             metrics={"primary": primary_value, "secondary": secondary_value, **kwargs},
@@ -421,7 +421,7 @@ class PolypharmacydeprescribingagentEnrichmentSuite:
         self.fallengine = FallEngine()
         self.renalengine = RenalEngine()
         self.cognitiveengine = CognitiveEngine()
-        self.medicationengine = MedicationEngine()
+        self.medicationreconciliationengine = MedicationReconciliationEngine()
 
     def execute_all(self, primary_val: float = 1.5, secondary_val: float = 0.5) -> Dict[str, Any]:
         results = {}
@@ -432,7 +432,7 @@ class PolypharmacydeprescribingagentEnrichmentSuite:
         results["FallEngine"] = self.fallengine.evaluate(primary_val, secondary_val)
         results["RenalEngine"] = self.renalengine.evaluate(primary_val, secondary_val)
         results["CognitiveEngine"] = self.cognitiveengine.evaluate(primary_val, secondary_val)
-        results["MedicationEngine"] = self.medicationengine.evaluate(primary_val, secondary_val)
+        results["MedicationReconciliationEngine"] = self.medicationreconciliationengine.evaluate(primary_val, secondary_val)
         return results
 
 # Global instance
