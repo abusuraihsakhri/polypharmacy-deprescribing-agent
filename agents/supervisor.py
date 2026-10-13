@@ -22,9 +22,9 @@ class SystemSupervisor:
 
     def process_task(self, payload: SystemTaskPayload, actor: str = "SystemSupervisor") -> ConsensusDossier:
         # Zero-PHI outbound validation
-        PHIGuard.assert_no_phi(payload.task_id)
-        PHIGuard.assert_no_phi(payload.target_identifier)
-        PHIGuard.assert_no_phi(payload.status_descriptor)
+        # Inspect every serializable input field, including nested attributes.
+        PHIGuard.assert_no_phi(payload.model_dump_json())
+        PHIGuard.assert_no_phi(actor)
 
         # Multi-worker evaluations
         all_alerts: List[AgentAlert] = []
@@ -75,5 +75,5 @@ class SystemSupervisor:
 
     def query_supervisory_chat(self, query: str) -> str:
         PHIGuard.assert_no_phi(query)
-        prompt = f"Supervisor inquiry for Polypharmacy Deprescribing Agent under CPIC Level A / FDA Guidance / ISMP Safety Standards: {query}"
+        prompt = f"Synthetic threshold demonstration inquiry (not clinical guidance): {query}"
         return self.llm.invoke(prompt)

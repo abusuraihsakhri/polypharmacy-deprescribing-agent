@@ -1,122 +1,54 @@
 # Polypharmacy Deprescribing Agent
 
-> **Domain:** Clinical Pharmacology & Precision Pharmacotherapy  
-> **Reference Guidelines & Standards:** `CPIC Guidelines & FDA Table of Pharmacogenomic Biomarkers`
+**Synthetic metric and rule-orchestration demonstration.** This repository contains several legacy Python interfaces that evaluate numeric thresholds, boolean flags, and status keywords. Despite their historical naming, **they do not ingest medication lists or implement AGS Beers 2023, STOPP/START, anticholinergic-burden scoring, interaction screening, or patient-specific deprescribing.** Do not use the outputs for clinical decisions.
 
-<div align="center">
+## Browser demonstration
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
+Open `web/index.html` locally to run the repository's three generic supervisor rules entirely in the browser. The page has no external network dependencies, servers, or accounts. Enter **synthetic data only**, review the deterministic alerts, and optionally download the result as JSON. The JavaScript mirrors the thresholds in `agents/workers.py`; no Python runtime is required for this small rule set.
 
-</div>
+GitHub Pages deployment is configured through `.github/workflows/pages.yml`. A public live URL should only be published here after the Pages deployment is confirmed operational.
 
----
+## Python interfaces
 
-## 📖 What It Does
-
-**Polypharmacy Deprescribing Agent** is an advanced analytical and computational platform implementing AGS Beers 2023 Criteria & Anticholinergic Cognitive Burden Agent.
-
----
-
-## ⚙️ Key Capabilities & Algorithmic Modules
-
-### 🔬 Core Algorithmic & Evaluation Engines
-
-- **`Severity`** — dedicated module for severity evaluation and state verification.
-- **`DomainKnowledgeRegistry`**: Enterprise domain rules, guideline matrices, and evidence benchmarks.
-- **`AgentAlert`** — dedicated module for agent alert evaluation and state verification.
-- **`BeersCriteriaMatcherAgent`**: Specialized Sub-Agent 1 for polypharmacy-deprescribing-agent
-- **`AnticholinergicBurdenCalculatorAgent`**: Specialized Sub-Agent 2 for polypharmacy-deprescribing-agent
-- **`DeprescribingPrioritizerAgent`**: Specialized Sub-Agent 3 for polypharmacy-deprescribing-agent
-
----
-
-## 💻 CLI Quickstart & Usage
-
-### 1. Guided Interactive Mode
-```bash
-python cli.py
-```
-
-### 2. Direct Parameterized Evaluation
-```bash
-python cli.py --task-id <value> --target <value> --primary <value> --secondary <value>
-```
-
-### Parameter Reference
-| Parameter | Command | Description | Default |
-|:----------|:--------|:------------|:--------|
-| `--task-id` | `audit` | Unique task/case identifier | `TASK-2026-001` |
-| `--target` | `audit` | Target entity or patient key identifier | `KEY-TARGET-01` |
-| `--primary` | `audit` | Primary domain measurement or score (float) | `28.5` |
-| `--secondary` | `audit` | Secondary kinetic or confidence score (float) | `14.2` |
-| `--critical` | `audit` | Flag for emergency escalation (boolean) | `False` |
-| `--status` | `audit` | Status code or phenotype descriptor | `DISCORDANT` |
-| `-i, --input` | `batch` | Path to input CSV file for batch processing | *required* |
-| `-o, --output` | `batch` | Path to output CSV file for results | `results.csv` |
-| `--host` | `serve` | Host address for the REST server | `127.0.0.1` |
-| `--port` | `serve` | Port number for the REST server | `8000` |
-
-### Input Data Schema
-
-| Field | Description | Requirement |
-|:------|:------------|:------------|
-| `case_id` | Parameter / observation metric | Required |
-| `patient_synthetic_id` | Parameter / observation metric | Required |
-| `metric_primary` | Parameter / observation metric | Required |
-| `metric_secondary` | Parameter / observation metric | Required |
-| `is_stat` | Parameter / observation metric | Required |
-| `status_flag` | Parameter / observation metric | Required |
-
----
-
-## 🛡️ Security & Enterprise Architecture
-
-* **Zero-PHI Outbound Interceptor:** Active AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition.
-* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances (`llama3`, `mistral`), Claude 3.5 Sonnet, GPT-4o, and deterministic test mocks.
-* **Active Learning Bayesian Calibration:** Dynamic tracker updating worker reliability weights and monitoring Brier calibration drift.
-* **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
-
----
-
-## 🔧 Configuration
-
-The audit system requires an `AUDIT_SECRET_KEY` environment variable for HMAC-SHA256 signing:
+Requires Python 3.9+; Python 3.10–3.12 are exercised in CI. From a source checkout:
 
 ```bash
-# Linux/macOS
-export AUDIT_SECRET_KEY="your-secure-audit-key"
-
-# Windows
-set AUDIT_SECRET_KEY=your-secure-audit-key
+python -m pip install -e '.[api,test]'
+export AUDIT_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
+python cli.py audit --task-id DEMO-001 --primary 28 --secondary 14
+python cli.py batch --input sample_system_tasks.csv --output results.csv
+python cli.py serve --host 127.0.0.1 --port 8000
 ```
 
-The CLI sets a default key automatically if none is provided. For production deployments, always set a strong secret.
+The root `cli.py` runs the Pydantic-based supervisor and signs **in-memory** audit metadata using HMAC-SHA256. Its API supports `GET /health`, `GET /metrics` (JSON, not Prometheus text), `POST /api/audit`, and `POST /api/chat`. The `GET /api/audit/logs` endpoint is disabled unless `AUDIT_LOG_READ_TOKEN` is configured, in which case clients must provide `Authorization: Bearer <token>`.
 
-## 🧪 Testing & Verification
+The included `sample_system_tasks.csv` matches the root CLI schema; `sample.csv` matches the separate package CLI schema.
 
-Run the automated test suite:
+Separate legacy interfaces remain available through `python deprescribe_mind.py` and `python -m polypharmacy_deprescribing_agent.cli`. These implement different synthetic thresholds and output schemas. The installed CLI entry point `polypharmacy-deprescribing-engine` invokes the latter. Do not interchange their input formats.
+
+## Docker
+
+Generate and export a strong `AUDIT_SECRET_KEY` in the host environment, then run:
 
 ```bash
-pytest -v
+docker compose up --build
 ```
 
-Execute high-throughput batch simulation benchmarks:
+The API is exposed on port 8000. Keep it behind an authentication layer and appropriate network restrictions if accessible beyond the local machine. The repository's example server is **not** a production PHI platform.
+
+## Tests and security limitations
 
 ```bash
-python simulator.py --tasks 1000 --concurrency 8
+python -m pytest -v
+python -m compileall -q agents polypharmacy_deprescribing_agent
 ```
 
----
+CI runs the Python test suite and checks browser JavaScript syntax. Regression tests cover HMAC metadata integrity, non-finite metric rejection, CSV boolean parsing, basic identifier-pattern blocking, and audit-log access control.
 
-## 🐳 Container Deployment
+The identifier guard uses **heuristic regular expressions**, not validated de-identification or HIPAA Safe Harbor certification. Do not submit real patient identifiers. Audit logs are **process-local**, not persistent or independently anchored; signatures protect recorded metadata but cannot prove the correctness of clinical decisions. Other described features such as autonomous learning, external model providers, and medication-specific rules are not integrated into the main supervisor workflow.
 
-```bash
-docker build -t polypharmacy-deprescribing-agent .
-docker run -p 8000:8000 polypharmacy-deprescribing-agent
-```
+No clinical validity, medication safety, regulatory compliance, or real-world deprescribing efficacy is claimed.
+
+## Technology and license
+
+Python, Pydantic v2, optional FastAPI/Uvicorn, HTML/CSS/JavaScript, GitHub Actions, Docker. Browser demo works in modern desktop and mobile browsers with JavaScript enabled. Distributed under the [MIT License](LICENSE).

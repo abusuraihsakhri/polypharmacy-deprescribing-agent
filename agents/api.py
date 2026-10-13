@@ -2,9 +2,12 @@
 FastAPI REST API Server for Polypharmacy Deprescribing Agent.
 """
 from typing import Dict, Any, List
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from .base import AuditLogger, PHIGuard
+import hmac
+import os
+from fastapi import FastAPI, HTTPException, Header
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+from .base import AuditLogger, PHIGuard, SecurityException
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
 
@@ -12,18 +15,25 @@ supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Polypharmacy Deprescribing Agent API",
-    description="Enterprise Distributed Component Platform (Clinical Pharmacology & Pharmacogenomics)",
+    description="Synthetic metric threshold demonstration; not a medication review or clinical decision support system.",
     version="3.0.0-ENTERPRISE",
 )
 
 
 class ChatRequest(BaseModel):
-    query: str
+    query: str = Field(min_length=1, max_length=2000)
+
+
+@app.exception_handler(SecurityException)
+async def handle_identifier_violation(request, exc):
+    return JSONResponse(status_code=400, content={
+        "detail": "Potential identifier detected. Use synthetic, de-identified data."
+    })
 
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "polypharmacy-deprescribing-agent", "domain": "Clinical Pharmacology & Pharmacogenomics", "standard": "CPIC Level A / FDA Guidance / ISMP Safety Standards", "version": "3.0.0-ENTERPRISE"}
+    return {"status": "HEALTHY", "service": "polypharmacy-deprescribing-agent", "domain": "Clinical Pharmacology & Pharmacogenomics", "standard": "Synthetic numeric thresholds only; no clinical guideline evaluation", "version": "3.0.0-ENTERPRISE"}
 
 
 @app.get("/metrics")
@@ -43,13 +53,16 @@ def api_audit(payload: SystemTaskPayload):
 
 @app.post("/api/chat")
 def api_chat(req: ChatRequest):
-    try:
-        ans = supervisor.query_supervisory_chat(req.query)
-        return {"response": ans}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return {"response": supervisor.query_supervisory_chat(req.query)}
 
 
 @app.get("/api/audit/logs")
-def api_audit_logs():
+def api_audit_logs(authorization: str = Header(default="")):
+    # An explicit, separate administrative token is required to expose process audit metadata.
+    token = os.getenv("AUDIT_LOG_READ_TOKEN")
+    if not token:
+        raise HTTPException(status_code=404, detail="Audit log endpoint is disabled")
+    expected = "Bearer " + token
+    if not hmac.compare_digest(authorization, expected):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     return {"audit_trail": AuditLogger.get_trail(), "verified": AuditLogger.verify_integrity()}
