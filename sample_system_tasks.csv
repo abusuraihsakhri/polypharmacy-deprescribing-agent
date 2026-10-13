@@ -1,0 +1,3 @@
+task_id,target_identifier,primary_metric,secondary_metric,status_descriptor,is_critical_flag
+TASK-001,SYNTH-001,10,5,NOMINAL,false
+TASK-002,SYNTH-002,35,15,DISCORDANT,true

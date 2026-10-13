@@ -12,6 +12,7 @@ import argparse
 import csv
 import datetime
 import json
+import math
 import sys
 import uuid
 from enum import Enum
@@ -27,6 +28,16 @@ def parse_bool(value):
     if normalized in {"false", "0", "no", "n", "off", ""}:
         return False
     raise ValueError("Invalid boolean field; expected true/false, 1/0, or yes/no")
+
+
+def parse_finite_float(value):
+    try:
+        result = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Metric must be numeric") from exc
+    if not math.isfinite(result):
+        raise ValueError("Metric must be finite")
+    return result
 
 
 class Severity(str, Enum):
@@ -81,7 +92,7 @@ class BeersCriteriaMatcherAgent:
     """Specialized Sub-Agent 1 for polypharmacy-deprescribing-agent"""
     def evaluate(self, payload: Dict[str, Any]) -> List[AgentAlert]:
         alerts = []
-        val1 = float(payload.get("metric_primary", 15.0))
+        val1 = parse_finite_float(payload.get("metric_primary", 15.0))
         if val1 > 20.0:
             alerts.append(
                 AgentAlert(
@@ -101,7 +112,7 @@ class AnticholinergicBurdenCalculatorAgent:
     def evaluate(self, payload: Dict[str, Any]) -> List[AgentAlert]:
         alerts = []
         is_critical = parse_bool(payload.get("critical_flag", False))
-        val2 = float(payload.get("metric_secondary", 5.0))
+        val2 = parse_finite_float(payload.get("metric_secondary", 5.0))
         if is_critical or val2 > 12.0:
             alerts.append(
                 AgentAlert(

@@ -73,3 +73,18 @@ def test_audit_logs_require_explicit_token(monkeypatch):
     response = client.get("/api/audit/logs", headers={"Authorization": "Bearer test-only-secret"})
     assert response.status_code == 200
     assert response.json()["verified"] is True
+
+
+def test_other_interfaces_reject_nonfinite_metrics():
+    from polypharmacy_deprescribing_agent.models import ClinicalCasePayload
+    from deprescribe_mind import DeprescribeCoordinator
+    with pytest.raises(ValueError):
+        ClinicalCasePayload(case_id="SYNTH", patient_synthetic_id="SYNTH", primary_metric=float("nan"),
+                            secondary_metric=1.0, status_flag="NORMAL")
+    with pytest.raises(ValueError):
+        DeprescribeCoordinator().audit_case({"metric_primary": "nan", "metric_secondary": 5})
+
+
+def test_identifiers_are_bounded():
+    with pytest.raises(ValidationError):
+        SystemTaskPayload(task_id="x"*129, target_identifier="SYNTH", primary_metric=1.0)

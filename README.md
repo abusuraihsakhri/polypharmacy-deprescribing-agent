@@ -16,11 +16,13 @@ Requires Python 3.9+; Python 3.10–3.12 are exercised in CI. From a source chec
 python -m pip install -e '.[api,test]'
 export AUDIT_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
 python cli.py audit --task-id DEMO-001 --primary 28 --secondary 14
-python cli.py batch --input sample.csv --output results.csv
+python cli.py batch --input sample_system_tasks.csv --output results.csv
 python cli.py serve --host 127.0.0.1 --port 8000
 ```
 
 The root `cli.py` runs the Pydantic-based supervisor and signs **in-memory** audit metadata using HMAC-SHA256. Its API supports `GET /health`, `GET /metrics` (JSON, not Prometheus text), `POST /api/audit`, and `POST /api/chat`. The `GET /api/audit/logs` endpoint is disabled unless `AUDIT_LOG_READ_TOKEN` is configured, in which case clients must provide `Authorization: Bearer <token>`.
+
+The included `sample_system_tasks.csv` matches the root CLI schema; `sample.csv` matches the separate package CLI schema.
 
 Separate legacy interfaces remain available through `python deprescribe_mind.py` and `python -m polypharmacy_deprescribing_agent.cli`. These implement different synthetic thresholds and output schemas. The installed CLI entry point `polypharmacy-deprescribing-engine` invokes the latter. Do not interchange their input formats.
 
