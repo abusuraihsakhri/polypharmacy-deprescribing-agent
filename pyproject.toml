@@ -23,5 +23,12 @@ dependencies = []
 polypharmacy-deprescribing-engine = "polypharmacy_deprescribing_agent.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/abusuraihsakhri/polypharmacy-deprescribing-engine"
-Repository = "https://github.com/abusuraihsakhri/polypharmacy-deprescribing-engine.git"
+Homepage = "https://github.com/abusuraihsakhri/polypharmacy-deprescribing-agent"
+Repository = "https://github.com/abusuraihsakhri/polypharmacy-deprescribing-agent"
+
+[project.optional-dependencies]
+api = ["fastapi>=0.100", "uvicorn>=0.23"]
+test = ["pytest>=7", "httpx>=0.24"]
+
+[tool.setuptools.packages.find]
+include = ["agents*", "polypharmacy_deprescribing_agent*"]

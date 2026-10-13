@@ -20,8 +20,8 @@ class InvariantQCWorker:
                 origin_worker="InvariantQCWorker",
                 urgency=UrgencyLevel.ELEVATED,
                 summary="Primary Metric Threshold Exceeded",
-                technical_details=f"Primary measurement ({payload.primary_metric:.2f}) exceeds upper reference limit (25.00) under CPIC Level A / FDA Guidance / ISMP Safety Standards.",
-                actionable_remediation="Initiate recalibration workflow and review secondary parameters.",
+                technical_details=f"Synthetic primary metric ({payload.primary_metric:.2f}) exceeds demonstration threshold (25.00); this is not a medication-specific guideline rule.",
+                actionable_remediation="Review the demonstration input and its threshold configuration.",
             ))
         return alerts
 
@@ -39,7 +39,7 @@ class SafetyEscalationWorker:
                 urgency=UrgencyLevel.CRITICAL_STAT if payload.is_critical_flag else UrgencyLevel.ELEVATED,
                 summary="Critical Safety Interlock Triggered",
                 technical_details=f"CriticalFlag={payload.is_critical_flag} with secondary index {payload.secondary_metric:.2f}.",
-                actionable_remediation="Execute immediate closed-loop escalation and notify attending supervisor.",
+                actionable_remediation="Review the manually supplied critical flag or secondary metric; no clinical emergency is determined.",
             ))
         return alerts
 
@@ -57,7 +57,7 @@ class ProtocolConformanceWorker:
                 origin_worker="ProtocolConformanceWorker",
                 urgency=UrgencyLevel.ELEVATED,
                 summary="Protocol Conformance Discordance Detected",
-                technical_details=f"Descriptor '{payload.status_descriptor}' indicates discordance with CPIC Level A / FDA Guidance / ISMP Safety Standards standards.",
-                actionable_remediation="Re-evaluate input specimen or rerun secondary confirmation assay.",
+                technical_details=f"Descriptor '{payload.status_descriptor}' contains a configured demonstration alert keyword.",
+                actionable_remediation="Review the descriptive status and confirm whether it was entered as intended.",
             ))
         return alerts

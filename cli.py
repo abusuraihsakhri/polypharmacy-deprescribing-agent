@@ -7,14 +7,25 @@ import json
 import os
 import sys
 
-# Set default audit key for CLI usage if not already configured
-os.environ.setdefault("AUDIT_SECRET_KEY", "polypharmacy-deprescribing-agent-cli-default-key")
+# The audit signing key must be supplied through AUDIT_SECRET_KEY.
+# Do not create a predictable production signing key in the CLI.
 
 from agents.models import SystemTaskPayload
 from agents.supervisor import SystemSupervisor
 from agents.base import AuditLogger
 
 supervisor = SystemSupervisor(model_provider="mock")
+
+
+def parse_csv_bool(value):
+    if isinstance(value, bool):
+        return value
+    normalized = str(value).strip().lower()
+    if normalized in {"true", "1", "yes", "y", "on"}:
+        return True
+    if normalized in {"false", "0", "no", "n", "off", ""}:
+        return False
+    raise ValueError("Invalid boolean field; expected true/false, 1/0, or yes/no")
 
 
 def main(argv=None):
@@ -97,7 +108,7 @@ def main(argv=None):
             print(f"Error: Permission denied reading '{args.input}'.", file=sys.stderr)
             return 1
 
-        out_fields = fieldnames + ["overall_urgency", "integrity_status", "total_alerts", "audit_hash"]
+        out_fields = list(dict.fromkeys(fieldnames + ["overall_urgency", "integrity_status", "total_alerts", "audit_hash"]))
         out_rows = []
         for r in rows:
             try:
@@ -107,7 +118,7 @@ def main(argv=None):
                     primary_metric=float(r.get("primary_metric", 15.0)),
                     secondary_metric=float(r.get("secondary_metric", 5.0)),
                     status_descriptor=r.get("status_descriptor", "NOMINAL"),
-                    is_critical_flag=bool(r.get("is_critical_flag", False)),
+                    is_critical_flag=parse_csv_bool(r.get("is_critical_flag", False)),
                 )
             except (ValueError, TypeError) as e:
                 print(f"Warning: Skipping row due to invalid data: {e}", file=sys.stderr)

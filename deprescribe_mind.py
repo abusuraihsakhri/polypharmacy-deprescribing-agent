@@ -18,6 +18,17 @@ from enum import Enum
 from typing import Dict, Any, List, Optional
 
 
+def parse_bool(value):
+    if isinstance(value, bool):
+        return value
+    normalized = str(value).strip().lower()
+    if normalized in {"true", "1", "yes", "y", "on"}:
+        return True
+    if normalized in {"false", "0", "no", "n", "off", ""}:
+        return False
+    raise ValueError("Invalid boolean field; expected true/false, 1/0, or yes/no")
+
+
 class Severity(str, Enum):
     INFO = "INFO"
     ADVISORY = "ADVISORY"
@@ -89,7 +100,7 @@ class AnticholinergicBurdenCalculatorAgent:
     """Specialized Sub-Agent 2 for polypharmacy-deprescribing-agent"""
     def evaluate(self, payload: Dict[str, Any]) -> List[AgentAlert]:
         alerts = []
-        is_critical = bool(payload.get("critical_flag", False))
+        is_critical = parse_bool(payload.get("critical_flag", False))
         val2 = float(payload.get("metric_secondary", 5.0))
         if is_critical or val2 > 12.0:
             alerts.append(
@@ -166,7 +177,7 @@ class DeprescribeCoordinator:
         if "summary" in q or "status" in q:
             return f"DeprescribeMind: Beers 2023 Criteria & STOPP/START Geriatric Medication Agent currently tracking {len(self.case_registry)} cases in local air-gapped memory."
         elif "guidelines" in q or "protocol" in q:
-            return "All sub-agents operate under validated consensus clinical algorithms and CAP/CLSI/NCCN/WHO standards."
+            return "The guidelines are not implemented as medication-specific rules in this demonstration. Do not use these outputs for patient care."
         else:
             return f"DeprescribeMind: Beers 2023 Criteria & STOPP/START Geriatric Medication Agent executive agent online. Continuous supervisory monitoring active across all domain parameters."
 
@@ -279,7 +290,7 @@ def main(argv=None):
             print(f"Error: Permission denied reading '{args.input}'.", file=sys.stderr)
             return 1
 
-        out_fields = fieldnames + ["overall_status", "total_alerts", "critical_count", "consensus_summary"]
+        out_fields = list(dict.fromkeys(fieldnames + ["overall_status", "total_alerts", "critical_count", "consensus_summary"]))
         out_rows = []
         for r in rows:
             try:

@@ -18,8 +18,8 @@ class ClinicalDomainEngine:
         if value > cls.PRIMARY_BASELINE_LIMIT:
             return {
                 "title": "Primary Metric Threshold Exceeded",
-                "finding": f"Observed value ({value:.2f}) exceeds AGS Beers Criteria 2023 & STOPP/START clinical baseline limit ({cls.PRIMARY_BASELINE_LIMIT:.1f}).",
-                "recommendation": "Perform immediate secondary verification and calibration review.",
+                "finding": f"Synthetic primary metric ({value:.2f}) exceeds demonstration threshold ({cls.PRIMARY_BASELINE_LIMIT:.1f}); no medication or guideline criterion has been evaluated.",
+                "recommendation": "Review the supplied synthetic metric and the example threshold.",
             }
         return None
 
@@ -29,7 +29,7 @@ class ClinicalDomainEngine:
             return {
                 "title": "STAT Kinetic Escalation Triggered",
                 "finding": f"Kinetic parameter ({value:.2f}) with STAT={is_stat} requires prioritized supervision.",
-                "recommendation": "Activate closed-loop verbal clinician notification protocol per Joint Commission standards.",
+                "recommendation": "Review the manually supplied STAT flag or secondary metric; no clinical emergency is inferred.",
             }
         return None
 
@@ -40,6 +40,6 @@ class ClinicalDomainEngine:
             return {
                 "title": "Phenotypic / Biomarker Discordance Identified",
                 "finding": f"Status flag '{status_flag}' indicates divergence from standard diagnostic concordance.",
-                "recommendation": f"Order reflex confirmatory testing per AGS Beers Criteria 2023 & STOPP/START clinical recommendations.",
+                "recommendation": "Review the example descriptor; it is not a Beers or STOPP/START medication assessment.",
             }
         return None
