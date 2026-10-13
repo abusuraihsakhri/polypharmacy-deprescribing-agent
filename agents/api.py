@@ -6,7 +6,7 @@ import hmac
 import os
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from .base import AuditLogger, PHIGuard, SecurityException
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
@@ -21,7 +21,7 @@ app = FastAPI(
 
 
 class ChatRequest(BaseModel):
-    query: str
+    query: str = Field(min_length=1, max_length=2000)
 
 
 @app.exception_handler(SecurityException)
@@ -33,7 +33,7 @@ async def handle_identifier_violation(request, exc):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "polypharmacy-deprescribing-agent", "domain": "Clinical Pharmacology & Pharmacogenomics", "standard": "CPIC Level A / FDA Guidance / ISMP Safety Standards", "version": "3.0.0-ENTERPRISE"}
+    return {"status": "HEALTHY", "service": "polypharmacy-deprescribing-agent", "domain": "Clinical Pharmacology & Pharmacogenomics", "standard": "Synthetic numeric thresholds only; no clinical guideline evaluation", "version": "3.0.0-ENTERPRISE"}
 
 
 @app.get("/metrics")
@@ -53,11 +53,7 @@ def api_audit(payload: SystemTaskPayload):
 
 @app.post("/api/chat")
 def api_chat(req: ChatRequest):
-    try:
-        ans = supervisor.query_supervisory_chat(req.query)
-        return {"response": ans}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return {"response": supervisor.query_supervisory_chat(req.query)}
 
 
 @app.get("/api/audit/logs")

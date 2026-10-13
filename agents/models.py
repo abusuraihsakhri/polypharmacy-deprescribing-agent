@@ -47,7 +47,7 @@ class AgentAlert(BaseModel):
     summary: str
     technical_details: str
     actionable_remediation: str
-    standard_reference: str = "CPIC Level A / FDA Guidance / ISMP Safety Standards"
+    standard_reference: str = "Synthetic threshold demonstration; no clinical guideline assessment"
     timestamp: str = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat())
 
     def to_dict(self) -> Dict[str, Any]:

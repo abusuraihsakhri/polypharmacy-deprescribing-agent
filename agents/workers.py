@@ -1,7 +1,7 @@
 """
 Specialized Domain Worker Agents for Polypharmacy Deprescribing Agent.
 Domain: Clinical Pharmacology & Pharmacogenomics
-Standard: CPIC Level A / FDA Guidance / ISMP Safety Standards
+Standard: synthetic demonstration thresholds; not medication rules
 """
 import uuid
 from typing import Dict, Any, List, Optional

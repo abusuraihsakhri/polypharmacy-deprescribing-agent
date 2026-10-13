@@ -93,7 +93,7 @@ class DeprescribeCoordinator:
             "stat_critical_alerts": stat_count,
             "warning_alerts": warn_count,
             "alerts": [a.to_dict() for a in all_alerts],
-            "guideline_standard": "AGS Beers Criteria 2023 & STOPP/START",
+            "guideline_standard": "No guideline rules implemented; synthetic threshold demonstration",
             "consensus_summary": f"Multi-agent supervision completed across 3 sub-agents with status [{status.value}].",
         }
 
@@ -105,6 +105,6 @@ class DeprescribeCoordinator:
         if "status" in q or "summary" in q:
             return f"DeprescribeMind: Beers 2023 Criteria & STOPP/START Geriatric Medication Agent currently tracking {len(self.case_registry)} cases in on-premises memory."
         elif "guideline" in q or "standard" in q:
-            return "Active clinical surveillance operates under AGS Beers Criteria 2023 & STOPP/START validated protocols."
+            return "This demonstration does not implement medication-level Beers or STOPP/START criteria."
         else:
-            return f"DeprescribeMind: Beers 2023 Criteria & STOPP/START Geriatric Medication Agent executive agent online. Zero-PHI air-gapped monitoring active."
+            return "Synthetic threshold and status-flag demonstration; no clinical decision support or PHI safety certification."
