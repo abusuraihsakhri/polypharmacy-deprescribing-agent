@@ -1,114 +1,155 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Polypharmacy Deprescribing Engine API",
-    "description": "Enterprise Distributed Component Platform (Clinical & Cryptographic AI) adhering to CAP / CLSI / NIST Standards.",
+    "title": "Polypharmacy Deprescribing Agent API",
     "version": "3.0.0-ENTERPRISE",
-    "contact": {
-      "name": "Dr. Abu Suraih Sakhri",
-      "url": "https://github.com/abusuraihsakhri"
-    }
+    "description": "Synthetic metric and status-flag rule demonstration. No medication-specific guideline logic, PHI certification, or clinical decision support."
   },
   "paths": {
     "/health": {
       "get": {
-        "summary": "Health and metadata check",
+        "summary": "Service health and metadata",
         "responses": {
           "200": {
-            "description": "System optimal"
+            "description": "JSON health response"
           }
         }
       }
     },
     "/metrics": {
       "get": {
-        "summary": "Prometheus operational metrics",
+        "summary": "Process-local counters",
         "responses": {
           "200": {
-            "description": "Prometheus text metrics"
+            "description": "JSON metrics (not Prometheus text)"
           }
         }
       }
     },
     "/api/audit": {
       "post": {
-        "summary": "Dispatch task payload across specialized workers",
+        "summary": "Evaluate generic synthetic thresholds",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": [
+                  "task_id",
+                  "target_identifier",
+                  "primary_metric"
+                ],
                 "properties": {
                   "task_id": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 128
                   },
                   "target_identifier": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 128
                   },
                   "primary_metric": {
                     "type": "number"
                   },
                   "secondary_metric": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 0
                   },
                   "status_descriptor": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "NOMINAL"
                   },
                   "is_critical_flag": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "additionalProperties": true
                   }
-                },
-                "required": [
-                  "task_id",
-                  "target_identifier",
-                  "primary_metric"
-                ]
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Consensus dossier with HMAC signature"
+            "description": "Synthetic evaluation and process-local HMAC metadata hash"
+          },
+          "400": {
+            "description": "Potential identifier pattern detected"
+          },
+          "422": {
+            "description": "Invalid request fields"
           }
         }
       }
     },
     "/api/chat": {
       "post": {
-        "summary": "Air-gapped supervisory conversational assistant",
+        "summary": "Deterministic mock response; not a model-backed assistant",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "query": {
-                    "type": "string"
-                  }
-                },
                 "required": [
                   "query"
-                ]
+                ],
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Supervisory response"
+            "description": "Mock text response"
+          },
+          "400": {
+            "description": "Potential identifier pattern detected"
+          },
+          "422": {
+            "description": "Invalid request fields"
           }
         }
       }
     },
     "/api/audit/logs": {
       "get": {
-        "summary": "Retrieve and cryptographically verify HMAC audit trail",
+        "summary": "Read process-local audit metadata (optional admin endpoint)",
+        "description": "Disabled by default. Set AUDIT_LOG_READ_TOKEN to enable; supply Authorization: Bearer <token>.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Cryptographic audit trail"
+            "description": "Audit metadata and signature integrity check"
+          },
+          "401": {
+            "description": "Missing or invalid bearer token"
+          },
+          "404": {
+            "description": "Endpoint not configured"
           }
         }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

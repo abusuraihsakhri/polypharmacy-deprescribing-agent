@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "polypharmacy-deprescribing-engine"
 version = "2.0.0"
-description = "DeprescribeMind: Beers 2023 Criteria & STOPP/START Geriatric Medication Engine"
+description = "Synthetic threshold and status-flag rule demonstration (not clinical decision support)"
 readme = "README.md"
 authors = [{ name = "Dr. Abu Suraih Sakhri", email = "abusuraih@example.com" }]
 license = { text = "MIT" }
